@@ -36,12 +36,7 @@ end
 
 namespace :redmine do
 	task :send_digest, :environment, :project, :start, :days, :debugging_messages do |t, args|
-		if Rails::VERSION::MAJOR >= 3
-			env = Rails.env
-		else
-			env = ENV
-		end
-		
+		env = ENV
 		options = {}
 		args.with_defaults(:project => nil, :start => nil, :days => nil, :environment => "production")
 		env['environment'] = args[:environment]
