@@ -77,7 +77,7 @@ class DigestMailer < Mailer
 		params["show_documents"] = 1
 		params["show_files"] = 1
 		params["show_wiki_edits"] = 1
-		user = User.find(:all, :conditions => ["admin='1'"]).first
+		user = User.where("admin='1'").first
 		dbg "Warning: Could not find an admin user. Some events might not be visible to the anonymous user" if user.nil?
 		activity = Redmine::Activity::Fetcher.new(user, :project => project,
 			:with_subprojects => with_subprojects)
@@ -133,21 +133,19 @@ class DigestMailer < Mailer
 		projects = []
 		if project.nil?
 			dbg "Looking up projects to process..."
-			p = EnabledModule.find(:all, :conditions => ["name = 'redmine_digest'"]).collect { |mod| mod.project_id }
+			p = EnabledModule.where(name: 'redmine_digest').collect { |mod| mod.project_id }
 			if p.length == 0
 				log "No projects were found in the environment or no projects have digest enabled."
 				return
 			end
-			condition = "id IN (" + p.join(",") + ")" 
-			projects = Project.find(:all, :conditions => [condition])
+			projects = Project.where("id IN (" + p.join(",") + ")")
 			if projects.empty?
 				log "Could not find matching project."
 			end
 			dbg "Found %i digestable projects out of %i total projects." % [projects.length, p.length]
 		else
 			dbg "Checking project '%s'" % project
-			projects = Project.find(:all, 
-				:conditions => ["id='%s' or identifier='%s'" % [project, project]])
+			projects = Project.where("id='%s' or identifier='%s'" % [project, project])
 			if projects.length == 0
 				log "The specified project '%s' was not found." % [project]
 			end
@@ -162,7 +160,7 @@ class DigestMailer < Mailer
 		default = default.nil? ? false : default
 		dbg "Default setting for whether digest is active for users: %s" % default.to_s
 
-		members = Member.find(:all, :conditions => { :project_id => project[:id] }).each { |m|
+		members = Member.where(:project_id => project[:id]).each { |m|
 			user = m.user
 
 			# Skip groups
